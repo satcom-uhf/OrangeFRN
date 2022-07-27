@@ -1,6 +1,9 @@
 # OrangeFRN
 Extra GPIO features for AlterFRN client
 
+Бинарник нужно положить рядом с лог-файлом, выдать ему права (сhmod +x)
+Перед запуском нужно подготовить конфигурационный файл config.json:
+
 Пример конфига
 ```json
 {
