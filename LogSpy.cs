@@ -52,6 +52,7 @@ namespace OrangeFRN
             {
                 if (line.Contains(item.Key, StringComparison.InvariantCultureIgnoreCase))
                 {
+                    Console.WriteLine($"Executing {item.Key}");
                     ApplyState(item.Value.pins);
                     await Task.Delay(item.Value.time);
                     ApplyState(_config.DefaultState);
@@ -68,6 +69,7 @@ namespace OrangeFRN
                     _controller.OpenPin(item.Key, PinMode.Output);
                 }
                 _controller.Write(item.Key, item.Value);
+                Console.WriteLine($"Pin {item.Key} : {item.Value}");
             }
         }
 
