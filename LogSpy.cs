@@ -59,7 +59,7 @@ namespace OrangeFRN
                 }
             }
         }
-        private void ApplyState(Dictionary<int, PinValue> pins)
+        private void ApplyState(Dictionary<int, byte> pins)
         {
             foreach (var item in pins)
             {

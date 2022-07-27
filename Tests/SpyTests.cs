@@ -1,21 +1,24 @@
 using OrangeFRN;
 using System.Device.Gpio;
+using System.Text.Json;
 
 namespace Tests
 {
+    [Collection("Sequential")]
     public class SpyTests
     {
+        private readonly GpioController target = new GpioController(PinNumberingScheme.Logical, new FakeGpio());
+            
         [Fact]
         public void DefaultStateTest()
         {
-            using var target = new GpioController(PinNumberingScheme.Logical, new FakeGpio());
             var spy = new LogSpy(target, new Config
             {
                 DefaultState = new()
                 {
-                    {3, PinValue.High },
-                    {5, PinValue.Low },
-                    {7, PinValue.High }
+                    {3, (byte)PinValue.High },
+                    {5, (byte)PinValue.Low },
+                    {7, (byte)PinValue.High }
                 }
             });
             spy.Run();
@@ -25,34 +28,43 @@ namespace Tests
         }
 
         [Fact]
-        public async Task ExecuteCommandTest()
+        public async Task ShouldExecuteCommandsIfLogFileModified()
         {
-            using var target = new GpioController(PinNumberingScheme.Logical, new FakeGpio());
-            var spy = new LogSpy(target, new Config
+            await ExecuteCommandTest(new Config
             {
                 DefaultState = new()
                 {
-                    { 3, PinValue.High },
-                    { 5, PinValue.Low },
-                    { 7, PinValue.High }
+                    { 3, (byte)PinValue.High },
+                    { 5, (byte)PinValue.Low },
+                    { 7, (byte)PinValue.High }
                 },
                 Commands = new()
                 {
                     {"bang!",
-                        (new()
+                        new (new()
                         {
-                            {5, PinValue.High },
-                            {7, PinValue.Low }
+                            {5, (byte)PinValue.High },
+                            {7, (byte)PinValue.Low }
                         }, TimeSpan.FromSeconds(5))
                     },
                     {"booms",
-                        (new()
+                        new (new()
                         {
-                            {4,PinValue.High }
+                            {4,(byte)PinValue.High }
                         }, TimeSpan.FromSeconds(3))
                     }
                 }
             });
+        }
+
+        [Fact]
+        public async Task ShouldExecuteCommandsFromJsonIfLogFileModified()
+        {
+            await ExecuteCommandTest(JsonSerializer.Deserialize<Config>(File.ReadAllText("config.json")));
+        }
+        private async Task ExecuteCommandTest(Config cfg)
+        {
+            var spy = new LogSpy(target, cfg);
             spy.Run();
             File.AppendAllLines(LogSpy.Log, new[] { "New message:Bang!" });
             await Task.Delay(300);

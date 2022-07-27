@@ -21,7 +21,31 @@ catch (Exception ex)
 
 Config InitConfig()
 {
-    var cfg= new Config();
+    var cfg = new Config
+    {
+        DefaultState = new()
+                {
+                    { 3, (byte)PinValue.High },
+                    { 5, (byte)PinValue.Low },
+                    { 7, (byte)PinValue.High }
+                },
+        Commands = new()
+                {
+                    {"bang!",
+                        new (new()
+                        {
+                            {5, (byte)PinValue.High },
+                            {7, (byte)PinValue.Low }
+                        }, TimeSpan.FromSeconds(5))
+                    },
+                    {"booms",
+                        new (new()
+                        {
+                            {4,(byte)PinValue.High }
+                        }, TimeSpan.FromSeconds(3))
+                    }
+                }
+    };
     if (!File.Exists(config))
     {
         File.WriteAllText(config, JsonSerializer.Serialize(cfg));

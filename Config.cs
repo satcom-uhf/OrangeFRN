@@ -1,11 +1,10 @@
-﻿using System.Device.Gpio;
-
-namespace OrangeFRN
+﻿namespace OrangeFRN
 {
-    using PinsState = Dictionary<int, PinValue>;
+    using PinsState = Dictionary<int, byte>;
+    public record CommandDescription(PinsState pins, TimeSpan time) { }
     public class Config
     {
         public PinsState DefaultState { get; set; } = new PinsState();
-        public Dictionary<string, (PinsState pins, TimeSpan time)> Commands { get; set; } = new Dictionary<string, (PinsState pins, TimeSpan time)>();    
+        public Dictionary<string, CommandDescription> Commands { get; set; } = new ();    
     }
 }
