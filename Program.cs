@@ -9,8 +9,6 @@ try
     using var controller = new GpioController();
     var spy = new LogSpy(controller, cfg);
     spy.Run();
-    //controller.OpenPin(pin, PinMode.Output);
-   // controller.Write(pin, ((ledOn) ? PinValue.High : PinValue.Low));
     Console.WriteLine("OrangeFRN is running. Press enter to exit.");
     Console.ReadLine();
     return 0;
