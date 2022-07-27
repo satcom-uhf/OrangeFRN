@@ -10,14 +10,14 @@ Extra GPIO features for AlterFRN client
     "7": 1
   },
   "Commands": {
-    "bang!": {
+    "AlkoCH": {
       "pins": {
         "5": 1,
         "7": 0
       },
       "time": "00:00:05"
     },
-    "booms": {
+    "Ch555": {
       "pins": {
         "3": 0
       },
