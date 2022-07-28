@@ -1,10 +1,12 @@
 ﻿namespace OrangeFRN
 {
-    using PinsState = Dictionary<int, byte>;
-    public record CommandDescription(PinsState pins, TimeSpan time) { }
     public class Config
     {
-        public PinsState DefaultState { get; set; } = new PinsState();
-        public Dictionary<string, CommandDescription> Commands { get; set; } = new ();    
+        public string CommandPrefix { get; set; } = "MOTO";
+        public string CommandSuffix { get; set; } = "!";
+        public byte DefaultLevel { get; set; }
+        public int ClickTimeMs { get; set; } = 300;
+        public int[] Pins { get; set; } = new int [] {}; 
+        public Dictionary<string, byte[]> Commands { get; set; } = new();
     }
 }

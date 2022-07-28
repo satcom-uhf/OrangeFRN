@@ -17,7 +17,7 @@ namespace OrangeFRN
 
         public void Run()
         {
-            ApplyState(_config.DefaultState);
+            ApplyState(string.Empty);
             var dir = new FileInfo(Log).FullName.Replace(Log, "");
             var fileWatcher = new FileSystemWatcher(dir);
             string[] lines = File.ReadAllLines(Log);
@@ -38,7 +38,7 @@ namespace OrangeFRN
                         }
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Console.WriteLine(ex);
                 }
@@ -48,28 +48,34 @@ namespace OrangeFRN
 
         private async Task ExecuteCommand(string line)
         {
-            foreach (var item in _config.Commands)
+            int from = line.IndexOf(_config.CommandPrefix) + _config.CommandPrefix.Length;
+            int to = line.LastIndexOf(_config.CommandSuffix);
+            var commands = line.Substring(from, to - from).Trim().Split(' ');
+            foreach (var command in commands)
             {
-                if (line.Contains(item.Key, StringComparison.InvariantCultureIgnoreCase))
+                if (_config.Commands.ContainsKey(command))
                 {
-                    Console.WriteLine($"Executing {item.Key}");
-                    ApplyState(item.Value.pins);
-                    await Task.Delay(item.Value.time);
-                    ApplyState(_config.DefaultState);
-                    return;
+                    ApplyState(command);
+                    await Task.Delay(_config.ClickTimeMs);
+                    ApplyState(string.Empty);
                 }
             }
         }
-        private void ApplyState(Dictionary<int, byte> pins)
+        private void ApplyState(string command)
         {
-            foreach (var item in pins)
+            var levelMap = _config.Commands.TryGetValue(command, out var custom)
+                ? custom
+                : Enumerable.Repeat(_config.DefaultLevel, _config.Pins.Length).ToArray();
+            for (int i = 0; i < _config.Pins.Length; i++)
             {
-                if (!_controller.IsPinOpen(item.Key))
+                var pin = _config.Pins[i];
+                var level = levelMap[i];
+                if (!_controller.IsPinOpen(pin))
                 {
-                    _controller.OpenPin(item.Key, PinMode.Output);
+                    _controller.OpenPin(pin, PinMode.Output);
                 }
-                _controller.Write(item.Key, item.Value);
-                Console.WriteLine($"Pin {item.Key} : {item.Value}");
+                _controller.Write(pin, level);
+                Console.WriteLine($"Pin {pin} : {level}");
             }
         }
 

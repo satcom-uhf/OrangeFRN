@@ -23,27 +23,11 @@ Config InitConfig()
 {
     var cfg = new Config
     {
-        DefaultState = new()
-                {
-                    { 3, (byte)PinValue.High },
-                    { 5, (byte)PinValue.Low },
-                    { 7, (byte)PinValue.High }
-                },
+        Pins = new[] { 3, 5, 7 },
         Commands = new()
                 {
-                    {"bang!",
-                        new (new()
-                        {
-                            {5, (byte)PinValue.High },
-                            {7, (byte)PinValue.Low }
-                        }, TimeSpan.FromSeconds(5))
-                    },
-                    {"booms",
-                        new (new()
-                        {
-                            {4,(byte)PinValue.High }
-                        }, TimeSpan.FromSeconds(3))
-                    }
+                    {"7",new byte[]{1,0,1} },
+                    {"3",new byte[]{0,1,0} }
                 }
     };
     if (!File.Exists(config))

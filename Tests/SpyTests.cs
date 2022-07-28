@@ -8,75 +8,53 @@ namespace Tests
     public class SpyTests
     {
         private readonly GpioController target = new GpioController(PinNumberingScheme.Logical, new FakeGpio());
-            
+
         [Fact]
         public void DefaultStateTest()
         {
             var spy = new LogSpy(target, new Config
             {
-                DefaultState = new()
-                {
-                    {3, (byte)PinValue.High },
-                    {5, (byte)PinValue.Low },
-                    {7, (byte)PinValue.High }
-                }
+                DefaultLevel = 1,
+                Pins = new[] { 3, 5, 7 }
             });
             spy.Run();
-            Assert.Equal(PinValue.High, target.Read(3));
-            Assert.Equal(PinValue.Low, target.Read(5));
-            Assert.Equal(PinValue.High, target.Read(7));
+            Assert.Equal(1, target.Read(3));
+            Assert.Equal(1, target.Read(5));
+            Assert.Equal(1, target.Read(7));
         }
 
         [Fact]
         public async Task ShouldExecuteCommandsIfLogFileModified()
         {
-            await ExecuteCommandTest(new Config
+            var cfg = new Config
             {
-                DefaultState = new()
-                {
-                    { 3, (byte)PinValue.High },
-                    { 5, (byte)PinValue.Low },
-                    { 7, (byte)PinValue.High }
-                },
+                ClickTimeMs = 1000,
+                DefaultLevel = 0,
+                Pins = new[] { 3, 5, 7 },
                 Commands = new()
                 {
-                    {"bang!",
-                        new (new()
-                        {
-                            {5, (byte)PinValue.High },
-                            {7, (byte)PinValue.Low }
-                        }, TimeSpan.FromSeconds(5))
-                    },
-                    {"booms",
-                        new (new()
-                        {
-                            {4,(byte)PinValue.High }
-                        }, TimeSpan.FromSeconds(3))
-                    }
+                    {"7",new byte[]{1,0,1} },
+                    {"3",new byte[]{0,1,0} }
                 }
-            });
-        }
-
-        [Fact]
-        public async Task ShouldExecuteCommandsFromJsonIfLogFileModified()
-        {
-            await ExecuteCommandTest(JsonSerializer.Deserialize<Config>(File.ReadAllText("config.json")));
-        }
-        private async Task ExecuteCommandTest(Config cfg)
-        {
+            };
             var spy = new LogSpy(target, cfg);
             spy.Run();
-            File.AppendAllLines(LogSpy.Log, new[] { "New message:Bang!" });
+            File.AppendAllLines(LogSpy.Log, new[] { "New message: MOTO 7 3!" });
+            
             await Task.Delay(300);
-            Assert.Equal(PinValue.High, target.Read(5));
-            Assert.Equal(PinValue.Low, target.Read(7));
-            File.AppendAllLines(LogSpy.Log, new[] { "New message:bOOms!" });
-            await Task.Delay(300);
-            Assert.Equal(PinValue.High, target.Read(4));
-            await Task.Delay(TimeSpan.FromSeconds(5));
             Assert.Equal(PinValue.High, target.Read(3));
             Assert.Equal(PinValue.Low, target.Read(5));
             Assert.Equal(PinValue.High, target.Read(7));
+            
+            await Task.Delay(1300);
+            Assert.Equal(PinValue.Low, target.Read(3));
+            Assert.Equal(PinValue.High, target.Read(5));
+            Assert.Equal(PinValue.Low, target.Read(7));
+            
+            await Task.Delay(2200);
+            Assert.Equal(PinValue.Low, target.Read(3));
+            Assert.Equal(PinValue.Low, target.Read(5));
+            Assert.Equal(PinValue.Low, target.Read(7));
         }
     }
 }
