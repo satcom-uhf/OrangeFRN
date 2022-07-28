@@ -30,13 +30,15 @@ Config InitConfig()
                     {"3",new byte[]{0,1,0} }
                 }
     };
+    var opts = new JsonSerializerOptions();
+    opts.Converters.Add(new ByteArrayConverter());
     if (!File.Exists(config))
     {
-        File.WriteAllText(config, JsonSerializer.Serialize(cfg));
+        File.WriteAllText(config, JsonSerializer.Serialize(cfg, opts));
     }
     else
     {
-        cfg = JsonSerializer.Deserialize<Config>(File.ReadAllText(config)) ?? throw new Exception("Corrupted config");
+        cfg = JsonSerializer.Deserialize<Config>(File.ReadAllText(config), opts) ?? throw new Exception("Corrupted config");
     }
     return cfg;
 }

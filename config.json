@@ -1,22 +1,11 @@
 {
-  "DefaultState": {
-    "3": 1,
-    "5": 0,
-    "7": 1
-  },
+  "CommandPrefix": "MOTO",
+  "CommandSuffix": "!",
+  "DefaultLevel": 0,
+  "ClickTimeMs": 300,
+  "Pins": [ 3, 5, 7 ],
   "Commands": {
-    "bang!": {
-      "pins": {
-        "5": 1,
-        "7": 0
-      },
-      "time": "00:00:05"
-    },
-    "booms": {
-      "pins": {
-        "3": 0
-      },
-      "time": "00:00:03"
-    }
+    "7": [ 1, 0, 1 ],
+    "3": [ 0, 1, 0 ]
   }
 }
