@@ -23,3 +23,19 @@ Extra GPIO features for AlterFRN client
 ```javascript
 Всем привет, давайте нажмем на тангенте семерочка троечка MOTO 7 3 ! все готово
 ```
+
+Простейший конфиг управления пином 18:
+```javascript
+{
+  "Pins": [ 18 ],
+  "CommandPrefix": "MOTO", 
+  "CommandSuffix": "!", 
+  "DefaultLevel": 0, 
+  "ClickTimeMs": 2000, // 2 сек
+  "Commands": {
+    "ON": [ 1 ]
+  }
+}
+```
+
+```MOTO ON!```
