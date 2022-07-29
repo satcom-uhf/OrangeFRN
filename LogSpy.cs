@@ -34,6 +34,7 @@ namespace OrangeFRN
                         lines = newlines;
                         foreach (var line in lines.TakeLast(delta))
                         {
+                            Console.WriteLine(line);
                             await ExecuteCommand(line);
                         }
                     }
@@ -50,7 +51,13 @@ namespace OrangeFRN
         {
             int from = line.IndexOf(_config.CommandPrefix) + _config.CommandPrefix.Length;
             int to = line.LastIndexOf(_config.CommandSuffix);
-            var commands = line.Substring(from, to - from).Trim().Split(' ');
+            var length = to - from;
+            if (length < 0)
+            {
+                Console.WriteLine("[No commands found]");
+                return;
+            }
+            var commands = line.Substring(from, length).Trim().Split(' ');
             foreach (var command in commands)
             {
                 if (_config.Commands.ContainsKey(command))
