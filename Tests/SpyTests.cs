@@ -38,7 +38,7 @@ namespace Tests
         [Fact]
         public async Task ShouldExecuteCommandsIfLogFileModified()
         {
-            var cts = new CancellationTokenSource(5000);
+            var cts = new CancellationTokenSource(7000);
 
             var cfg = new Config
             {
@@ -53,27 +53,33 @@ namespace Tests
             };
             var spy = new LogSpy(target, cfg);
             var task = spy.Run(cts.Token);
-            File.AppendAllLines(LogSpy.LogFile, new[] { "New message: MOTO 7 3!" });
+            async Task CheckChatMessage()
+            {
+                File.AppendAllLines(LogSpy.LogFile, new[] { "New message: MOTO 7 3!" });
 
-            await Task.Delay(300);
-            Assert.Equal(PinValue.High, target.Read(3));
-            Assert.Equal(PinValue.Low, target.Read(5));
-            Assert.Equal(PinValue.High, target.Read(7));
+                await Task.Delay(1000);
+                Assert.Equal(PinValue.High, target.Read(3));
+                Assert.Equal(PinValue.Low, target.Read(5));
+                Assert.Equal(PinValue.High, target.Read(7));
 
-            await Task.Delay(1000);
-            Assert.Equal(PinValue.Low, target.Read(3));
-            Assert.Equal(PinValue.Low, target.Read(5));
-            Assert.Equal(PinValue.Low, target.Read(7));
+                await Task.Delay(1000);
+                Assert.Equal(PinValue.Low, target.Read(3));
+                Assert.Equal(PinValue.Low, target.Read(5));
+                Assert.Equal(PinValue.Low, target.Read(7));
 
-            await Task.Delay(1000);
-            Assert.Equal(PinValue.Low, target.Read(3));
-            Assert.Equal(PinValue.High, target.Read(5));
-            Assert.Equal(PinValue.Low, target.Read(7));
+                await Task.Delay(1000);
+                Assert.Equal(PinValue.Low, target.Read(3));
+                Assert.Equal(PinValue.High, target.Read(5));
+                Assert.Equal(PinValue.Low, target.Read(7));
 
-            await Task.Delay(1000);
-            Assert.Equal(PinValue.Low, target.Read(3));
-            Assert.Equal(PinValue.Low, target.Read(5));
-            Assert.Equal(PinValue.Low, target.Read(7));
+                await Task.Delay(1000);
+                Assert.Equal(PinValue.Low, target.Read(3));
+                Assert.Equal(PinValue.Low, target.Read(5));
+                Assert.Equal(PinValue.Low, target.Read(7));
+
+            }
+            await CheckChatMessage();
+            await CheckChatMessage();
             await task;
         }
     }

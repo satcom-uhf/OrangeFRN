@@ -19,7 +19,11 @@ namespace OrangeFRN
 
         public async Task Run(CancellationToken cancellationToken)
         {
-            Channel<string> channel = Channel.CreateUnbounded<string>();
+            Channel<string> channel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions
+            {
+                SingleReader = true,
+                SingleWriter = false
+            });
             foreach (var pin in _config.Pins)
             {
                 if (!_controller.IsPinOpen(pin))
@@ -59,6 +63,7 @@ namespace OrangeFRN
                 try
                 {
                     var cmd = await channel.Reader.ReadAsync(cancellationToken);
+                    Log.Information(cmd);
                     await ExecuteCommand(cmd);
                 }
                 catch (OperationCanceledException)
