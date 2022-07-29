@@ -2,15 +2,25 @@
 using OrangeFRN;
 using System.Device.Gpio;
 using System.Text.Json;
+using Serilog;
 const string config = "config.json";
 try
 {
+    Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateLogger();
+    var cts = new CancellationTokenSource();
+    Console.CancelKeyPress += (s, e) =>
+    {
+        Log.Information("Canceling...");
+        cts.Cancel();
+        e.Cancel = true;
+    };
     Config cfg = InitConfig();
     using var controller = new GpioController();
     var spy = new LogSpy(controller, cfg);
-    spy.Run();
-    Console.WriteLine("OrangeFRN is running. Press enter to exit.");
-    Console.ReadLine();
+    Log.Information("OrangeFRN is running. Press CTRL+C to exit.");
+    await spy.Run(cts.Token);
     return 0;
 }
 catch (Exception ex)
