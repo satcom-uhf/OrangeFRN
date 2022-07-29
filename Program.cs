@@ -7,7 +7,7 @@ const string config = "config.json";
 try
 {
     Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
+    .WriteTo.Console(outputTemplate: "{Timestamp:HH:mm:ss.fff} [{Level}] {Message}{NewLine}{Exception}")
     .CreateLogger();
     var cts = new CancellationTokenSource();
     Console.CancelKeyPress += (s, e) =>
@@ -16,10 +16,11 @@ try
         cts.Cancel();
         e.Cancel = true;
     };
+    Log.Information("OrangeFRN is running. Press CTRL+C to exit.");
+
     Config cfg = InitConfig();
     using var controller = new GpioController();
     var spy = new LogSpy(controller, cfg);
-    Log.Information("OrangeFRN is running. Press CTRL+C to exit.");
     await spy.Run(cts.Token);
     return 0;
 }
@@ -33,24 +34,24 @@ Config InitConfig()
 {
     var cfg = new Config
     {
-        Pins = new[] { 15, 16, 18, 19, 21, 22, 23, 24 },
+        Pins = new[] { 3, 19, 18, 15, 16, 2, 14, 13 },
         Commands = new()
                 {
-                    {"0",new[]{ 19, 18} },
-                    {"1",new[]{ 22, 23} },
-                    {"2",new[]{ 19, 23} },
-                    {"3",new[]{ 16, 23} },
-                    {"4",new[]{ 24, 21} },
-                    {"5",new[]{ 22, 21} },
-                    {"6",new[]{ 19, 21} },
-                    {"7",new[]{ 16, 21} },
-                    {"8",new[]{ 24, 18} },
-                    {"9",new[]{ 22, 18} },
-                    {"*",new[]{ 23, 18} },
-                    {"#",new[]{ 24, 15} },
-                   {"F1",new[]{ 16, 15} },
-                   {"F2",new[]{ 19, 15} },
-                   {"F3",new[]{ 22, 15} },
+                    {"0",new[]{  15, 18} },
+                    {"1",new[]{  2, 14 } },
+                    {"2",new[]{  15, 14} },
+                    {"3",new[]{  19, 14} },
+                    {"4",new[]{  13, 16} },
+                    {"5",new[]{   2, 16} },
+                    {"6",new[]{  15, 16} },
+                    {"7",new[]{  19, 16} },
+                    {"8",new[]{  13, 18} },
+                    {"9",new[]{   2, 18} },
+                    {"*",new[]{  14, 18} },
+                    {"#",new[]{  13, 3 } },
+                   {"F1",new[]{  19, 3 } },
+                   {"F2",new[]{  15, 3 } },
+                   {"F3",new[]{   2, 3 } },
                 }
     };
     if (!File.Exists(config))
