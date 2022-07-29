@@ -4,6 +4,7 @@ using System.Device.Gpio;
 using System.Text.Json;
 using Serilog;
 using System.Diagnostics;
+using System.Text;
 
 const string config = "config.json";
 try
@@ -19,7 +20,7 @@ try
         e.Cancel = true;
     };
     Log.Information("OrangeFRN is running. Press CTRL+C to exit.");
-    
+
     Config cfg = InitConfig();
     using var controller = new GpioController();
     var spy = new LogSpy(controller, cfg);
@@ -27,21 +28,32 @@ try
     {
         Log.Information("Opening {port}", args[0]);
         var port = new System.IO.Ports.SerialPort(args[0]);
+        string buffer = "";
+
         port.DataReceived += (s, e) =>
         {
-            var data = port.ReadExisting();
+            var readCount = port.BytesToRead;
+            var bytes = new byte[readCount];
+            port.Read(bytes, 0, readCount);
+            var str = Encoding.ASCII.GetString(bytes);
+            var data = new string(str.Where(x =>
+            (char.IsLetterOrDigit(x) && x != 'P')
+            || char.IsSeparator(x)
+            || x == '.').ToArray());
             Log.Information("Serial data: {data}", data);
-            if (spy.AllowToSendFeedback)
+            buffer += data;
+            var msg = buffer.Length > 14 ? buffer.Substring(buffer.Length - 14) : buffer;
+            if (spy.AllowToSendFeedback && !string.IsNullOrEmpty(msg))
             {
                 try
                 {
-                    Process.Start(new ProcessStartInfo("/opt/alterfrn/FRNClientConsole.Linux-armv7.r7312", $"public \"{data}\" frnconsole.cfg.unix"));
+                    Process.Start(new ProcessStartInfo("/opt/alterfrn/FRNClientConsole.Linux-armv7.r7312", $"public \"{msg}\" frnconsole.cfg.unix"));
+                    buffer = "";
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Log.Error(ex, "Cannot send feedback via commandline");
                 }
-
             }
         };
         port.Open();
