@@ -37,7 +37,7 @@ namespace OrangeFRN
             string[] lines = File.ReadAllLines(LogFile);
             fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
             fileWatcher.Filter = LogFile;
-            fileWatcher.Changed += (s, e) =>
+            fileWatcher.Changed += async (s, e) =>
             {
                 try
                 {
@@ -48,13 +48,13 @@ namespace OrangeFRN
                         lines = newlines;
                         foreach (var line in lines.TakeLast(delta))
                         {
-                            channel.Writer.TryWrite(line);
+                            await channel.Writer.WriteAsync(line);
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
+                    Log.Error(ex, "Could not handle last lines from log");
                 }
             };
             fileWatcher.EnableRaisingEvents = true;
@@ -87,15 +87,15 @@ namespace OrangeFRN
                 Log.Information("No commands found");
                 return;
             }
-            var commands = line.Substring(from, length).Trim().Split(' ');
+            var keys = line.Substring(from, length).Trim().Split(' ');
             PinValue defaultLevel = _config.DefaultLevel;
             PinValue invertedLevel = !defaultLevel;
 
-            foreach (var command in commands)
+            foreach (var key in keys)
             {
-                if (_config.Commands.TryGetValue(command, out var pins))
+                if (_config.Commands.TryGetValue(key, out var pins))
                 {
-                    Log.Information("Command {command}", command);
+                    Log.Information("Click {key}", key);
                     ApplyState(pins, invertedLevel);
                     await Task.Delay(_config.ClickTimeMs);
                     ApplyState(_config.Pins, _config.DefaultLevel);
@@ -109,7 +109,7 @@ namespace OrangeFRN
             foreach (var pin in pins)
             {
                 _controller.Write(pin, level);
-                Log.Information("{pin}:{level}", pin, level);
+                //Log.Information("{pin}:{level}", pin, level);
             }
         }
 

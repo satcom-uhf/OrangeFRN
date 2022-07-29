@@ -57,7 +57,7 @@ namespace Tests
             {
                 File.AppendAllLines(LogSpy.LogFile, new[] { "New message: MOTO 7 3!" });
 
-                await Task.Delay(1000);
+                await Task.Delay(800);
                 Assert.Equal(PinValue.High, target.Read(3));
                 Assert.Equal(PinValue.Low, target.Read(5));
                 Assert.Equal(PinValue.High, target.Read(7));
