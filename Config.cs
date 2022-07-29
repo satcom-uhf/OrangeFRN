@@ -7,6 +7,6 @@
         public byte DefaultLevel { get; set; }
         public int ClickTimeMs { get; set; } = 300;
         public int[] Pins { get; set; } = new int [] {}; 
-        public Dictionary<string, byte[]> Commands { get; set; } = new();
+        public Dictionary<string, int[]> Commands { get; set; } = new();
     }
 }

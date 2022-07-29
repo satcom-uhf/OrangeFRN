@@ -17,7 +17,7 @@ namespace OrangeFRN
 
         public void Run()
         {
-            ApplyState(string.Empty);
+            ApplyState(_config.Pins, _config.DefaultLevel);
             var dir = new FileInfo(Log).FullName.Replace(Log, "");
             var fileWatcher = new FileSystemWatcher(dir);
             string[] lines = File.ReadAllLines(Log);
@@ -58,25 +58,23 @@ namespace OrangeFRN
                 return;
             }
             var commands = line.Substring(from, length).Trim().Split(' ');
+            PinValue defaultLevel = _config.DefaultLevel;
+            PinValue invertedLevel = !defaultLevel;
+
             foreach (var command in commands)
             {
-                if (_config.Commands.ContainsKey(command))
+                if (_config.Commands.TryGetValue(command, out var pins))
                 {
-                    ApplyState(command);
+                    ApplyState(pins, invertedLevel);
                     await Task.Delay(_config.ClickTimeMs);
-                    ApplyState(string.Empty);
+                    ApplyState(_config.Pins, _config.DefaultLevel);
                 }
             }
         }
-        private void ApplyState(string command)
+        private void ApplyState(int[] pins, PinValue level)
         {
-            var levelMap = _config.Commands.TryGetValue(command, out var custom)
-                ? custom
-                : Enumerable.Repeat(_config.DefaultLevel, _config.Pins.Length).ToArray();
-            for (int i = 0; i < _config.Pins.Length; i++)
+            foreach (var pin in pins)
             {
-                var pin = _config.Pins[i];
-                var level = levelMap[i];
                 if (!_controller.IsPinOpen(pin))
                 {
                     _controller.OpenPin(pin, PinMode.Output);

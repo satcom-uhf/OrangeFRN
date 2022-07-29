@@ -23,22 +23,33 @@ Config InitConfig()
 {
     var cfg = new Config
     {
-        Pins = new[] { 3, 5, 7 },
+        Pins = new[] { 15, 16, 18, 19, 21, 22, 23, 24 },
         Commands = new()
                 {
-                    {"7",new byte[]{1,0,1} },
-                    {"3",new byte[]{0,1,0} }
+                    {"0",new[]{ 19, 18} },
+                    {"1",new[]{ 22, 23} },
+                    {"2",new[]{ 19, 23} },
+                    {"3",new[]{ 16, 23} },
+                    {"4",new[]{ 24, 21} },
+                    {"5",new[]{ 22, 21} },
+                    {"6",new[]{ 19, 21} },
+                    {"7",new[]{ 16, 21} },
+                    {"8",new[]{ 24, 18} },
+                    {"9",new[]{ 22, 18} },
+                    {"*",new[]{ 23, 18} },
+                    {"#",new[]{ 24, 15} },
+                   {"F1",new[]{ 16, 15} },
+                   {"F2",new[]{ 19, 15} },
+                   {"F3",new[]{ 22, 15} },
                 }
     };
-    var opts = new JsonSerializerOptions();
-    opts.Converters.Add(new ByteArrayConverter());
     if (!File.Exists(config))
     {
-        File.WriteAllText(config, JsonSerializer.Serialize(cfg, opts));
+        File.WriteAllText(config, JsonSerializer.Serialize(cfg));
     }
     else
     {
-        cfg = JsonSerializer.Deserialize<Config>(File.ReadAllText(config), opts) ?? throw new Exception("Corrupted config");
+        cfg = JsonSerializer.Deserialize<Config>(File.ReadAllText(config)) ?? throw new Exception("Corrupted config");
     }
     return cfg;
 }
