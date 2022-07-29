@@ -3,6 +3,8 @@ using OrangeFRN;
 using System.Device.Gpio;
 using System.Text.Json;
 using Serilog;
+using System.Diagnostics;
+
 const string config = "config.json";
 try
 {
@@ -17,10 +19,34 @@ try
         e.Cancel = true;
     };
     Log.Information("OrangeFRN is running. Press CTRL+C to exit.");
-
+    
     Config cfg = InitConfig();
     using var controller = new GpioController();
     var spy = new LogSpy(controller, cfg);
+    if (args.Length > 0)
+    {
+        Log.Information("Opening {port}", args[0]);
+        var port = new System.IO.Ports.SerialPort(args[0]);
+        port.DataReceived += (s, e) =>
+        {
+            var data = port.ReadExisting();
+            Log.Information("Serial data: {data}", data);
+            if (spy.AllowToSendFeedback)
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo("/opt/alterfrn/FRNClientConsole.Linux-armv7.r7312", $"public \"{data}\" frnconsole.cfg.unix"));
+                }
+                catch(Exception ex)
+                {
+                    Log.Error(ex, "Cannot send feedback via commandline");
+                }
+
+            }
+        };
+        port.Open();
+    }
+
     await spy.Run(cts.Token);
     return 0;
 }

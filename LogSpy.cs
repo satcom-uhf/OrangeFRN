@@ -10,6 +10,7 @@ namespace OrangeFRN
 
         private readonly GpioController _controller;
         private readonly Config _config;
+        public bool AllowToSendFeedback { get; private set; }
 
         public LogSpy(GpioController controller, Config config)
         {
@@ -91,7 +92,7 @@ namespace OrangeFRN
             var keys = line.Substring(from, length).Trim().Split(' ');
             PinValue defaultLevel = _config.DefaultLevel;
             PinValue invertedLevel = !defaultLevel;
-
+            AllowToSendFeedback = false;
             foreach (var key in keys)
             {
                 if (_config.Commands.TryGetValue(key, out var pins))
@@ -104,6 +105,7 @@ namespace OrangeFRN
                     await Task.Delay(_config.ClickTimeMs);
                 }
             }
+            AllowToSendFeedback = true;
         }
         private void ApplyState(int[] pins, PinValue level)
         {
