@@ -40,7 +40,7 @@ namespace OrangeFRN
 
                     try
                     {
-                        await Task.Delay(50);
+                        await Task.Delay(200);
                         var newlines = File.ReadAllLines(LogFile);
                         var delta = newlines.Length - lines.Length;
                         if (delta > 0)
