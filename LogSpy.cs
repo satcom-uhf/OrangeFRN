@@ -32,32 +32,33 @@ namespace OrangeFRN
                 }
             }
             ApplyState(_config.Pins, _config.DefaultLevel);
-            var dir = new FileInfo(LogFile).FullName.Replace(LogFile, "");
-            var fileWatcher = new FileSystemWatcher(dir);
             string[] lines = File.ReadAllLines(LogFile);
-            fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
-            fileWatcher.Filter = LogFile;
-            fileWatcher.Changed += async (s, e) =>
+            await Task.Factory.StartNew(async () =>
             {
-                try
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    var newlines = File.ReadAllLines(LogFile);
-                    var delta = newlines.Length - lines.Length;
-                    if (delta > 0)
+
+                    try
                     {
-                        lines = newlines;
-                        foreach (var line in lines.TakeLast(delta))
+                        await Task.Delay(50);
+                        var newlines = File.ReadAllLines(LogFile);
+                        var delta = newlines.Length - lines.Length;
+                        if (delta > 0)
                         {
-                            await channel.Writer.WriteAsync(line);
+                            lines = newlines;
+                            foreach (var line in lines.TakeLast(delta))
+                            {
+                                await channel.Writer.WriteAsync(line);
+                            }
                         }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Could not handle last lines from log");
                     }
                 }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Could not handle last lines from log");
-                }
-            };
-            fileWatcher.EnableRaisingEvents = true;
+            });
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -95,12 +96,12 @@ namespace OrangeFRN
             {
                 if (_config.Commands.TryGetValue(key, out var pins))
                 {
-                    Log.Information("Click {key}", key);
+                    Log.Information("Press {key}", key);
                     ApplyState(pins, invertedLevel);
                     await Task.Delay(_config.ClickTimeMs);
                     ApplyState(_config.Pins, _config.DefaultLevel);
                     await Task.Delay(_config.ClickTimeMs);
-                    Log.Information("Command done");
+                    Log.Information("Free");
                 }
             }
         }
