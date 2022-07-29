@@ -96,12 +96,12 @@ namespace OrangeFRN
             {
                 if (_config.Commands.TryGetValue(key, out var pins))
                 {
-                    Log.Information("Press {key}", key);
                     ApplyState(pins, invertedLevel);
+                    Log.Information("Press {key}", key);
                     await Task.Delay(_config.ClickTimeMs);
                     ApplyState(_config.Pins, _config.DefaultLevel);
-                    await Task.Delay(_config.ClickTimeMs);
                     Log.Information("Free");
+                    await Task.Delay(_config.ClickTimeMs);
                 }
             }
         }
