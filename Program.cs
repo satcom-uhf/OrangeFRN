@@ -9,6 +9,7 @@ using System.Text;
 const string config = "config.json";
 try
 {
+    Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     Log.Logger = new LoggerConfiguration()
     .WriteTo.Console(outputTemplate: "{Timestamp:HH:mm:ss.fff} [{Level}] {Message}{NewLine}{Exception}")
     .CreateLogger();
@@ -24,36 +25,38 @@ try
     Config cfg = InitConfig();
     using var controller = new GpioController();
     var spy = new LogSpy(controller, cfg);
+    var detector = new DisplayUpdateDetector();
+    detector.MessageDetected += (s, e) =>
+    {
+        var msg = detector.DisplayRows.Values.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x));
+        if (spy.AllowToSendFeedback && !string.IsNullOrEmpty(msg))
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo("/opt/alterfrn/FRNClientConsole.Linux-armv7.r7312", $"public \"{msg}\" frnconsole.cfg.unix"));
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Cannot send feedback via commandline");
+            }
+        }
+    };
+
     if (args.Length > 0)
     {
         Log.Information("Opening {port}", args[0]);
         var port = new System.IO.Ports.SerialPort(args[0]);
-        string buffer = "";
 
         port.DataReceived += (s, e) =>
         {
-            var readCount = port.BytesToRead;
-            var bytes = new byte[readCount];
-            port.Read(bytes, 0, readCount);
-            var str = Encoding.ASCII.GetString(bytes);
-            var data = new string(str.Where(x =>
-            (char.IsLetterOrDigit(x) && x != 'P')
-            || char.IsSeparator(x)
-            || x == '.').ToArray());
-            Log.Information("Serial data: {data}", data);
-            buffer += data;
-            var msg = buffer.Length > 14 ? buffer.Substring(buffer.Length - 14) : buffer;
-            if (spy.AllowToSendFeedback && !string.IsNullOrEmpty(msg))
+            while (port.BytesToRead > 0)
             {
-                try
+                var b = port.ReadByte();
+                if (b == -1)
                 {
-                    Process.Start(new ProcessStartInfo("/opt/alterfrn/FRNClientConsole.Linux-armv7.r7312", $"public \"{msg}\" frnconsole.cfg.unix"));
-                    buffer = "";
+                    break;
                 }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Cannot send feedback via commandline");
-                }
+                detector.AddByte((byte)b);
             }
         };
         port.Open();
