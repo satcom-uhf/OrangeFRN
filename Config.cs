@@ -2,6 +2,8 @@
 {
     public class Config
     {
+        public string PathToFRN { get; set; }
+        public string ChatCommandTemplate { get; set; }
         public string CommandPrefix { get; set; } = "MOTO";
         public string CommandSuffix { get; set; } = "!";
         public byte DefaultLevel { get; set; }

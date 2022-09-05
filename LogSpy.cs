@@ -33,6 +33,10 @@ namespace OrangeFRN
                 }
             }
             ApplyState(_config.Pins, _config.DefaultLevel);
+            if (!File.Exists(LogFile))
+            {
+                Console.WriteLine($"Error: {LogFile} not found");
+            }
             string[] lines = File.ReadAllLines(LogFile);
             await Task.Factory.StartNew(async () =>
             {

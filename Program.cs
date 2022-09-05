@@ -33,7 +33,7 @@ try
         {
             try
             {
-                Process.Start(new ProcessStartInfo("/opt/alterfrn/FRNClientConsole.Linux-armv7.r7312", $"public \"{msg}\" frnconsole.cfg.unix"));
+                Process.Start(new ProcessStartInfo(cfg.PathToFRN, cfg.ChatCommandTemplate.Replace("TEXT", msg)));
             }
             catch (Exception ex)
             {
