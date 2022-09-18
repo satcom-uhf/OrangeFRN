@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>AmplitudeJS Testing</title>
+
+    <!-- Include Style Sheet -->
+    <link rel="stylesheet" type="text/css" href="app.css" />
+    <script src="/amplitude.min.js"></script>
+    <script src="/vue.global.js"></script>
+    <script src="/vue-datepicker.iife.js"></script>
+    <link rel="stylesheet" href="/vuedatepicker.css">
+
+</head>
+<body>
+    <div class="top">
+        <div id="player-left-bottom">
+            <div id="time-container">
+                <span class="current-time">
+                    <span class="amplitude-current-minutes"></span>:<span class="amplitude-current-seconds"></span>
+                </span>
+                <div id="progress-container">
+                    <div class="amplitude-wave-form">
+
+                    </div>
+                    <input type="range" class="amplitude-song-slider" />
+                    <progress id="song-played-progress" class="amplitude-song-played-progress"></progress>
+                    <progress id="song-buffered-progress" class="amplitude-buffered-progress" value="0"></progress>
+                </div>
+                <span class="duration">
+                    <span class="amplitude-duration-minutes"></span>:<span class="amplitude-duration-seconds"></span>
+                </span>
+            </div>
+
+            <div id="control-container">
+
+                <div id="central-control-container">
+                    <div id="central-controls">
+                        <div class="amplitude-prev" id="previous"></div>
+                        <div class="amplitude-play-pause" id="play-pause"></div>
+                        <div class="amplitude-next" id="next"></div>
+                    </div>
+                </div>
+
+                <div id="volume-container">
+                    <div class="volume-controls">
+                        <div class="amplitude-mute amplitude-not-muted"></div>
+                        <input type="range" class="amplitude-volume-slider" />
+                        <div class="ms-range-fix"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="meta-container">
+                <span data-amplitude-song-info="name" class="song-name"></span>
+
+                <div class="song-artist-album">
+                    <span data-amplitude-song-info="artist"></span>
+                    <span data-amplitude-song-info="album"></span>
+                </div>
+            </div>
+        </div>       
+    </div>
+    <!-- Amplitude Player -->
+    <div id="amplitude-player">
+        <div id="amplitude-right">
+            <div id="dateselector">
+                <select name="year" v-model="year">
+                    <option>{{new Date().getFullYear()}}</option>
+                    <option>{{new Date().getFullYear()-1}}</option>
+                </select>
+                <select name="month" v-model="month">
+                    <option v-for="month in Array.from({length: 12}, (_, i) => i + 1)" :value="month-1">{{month}}</option>
+                </select>
+                <select name="day" v-model="day">
+                    <option v-for="day in Array.from({length: 31}, (_, i) => i + 1)">{{day}}</option>
+                </select>
+            </div>
+            <div v-for="(song, index) in songs" class="song amplitude-song-container amplitude-play-pause" :data-amplitude-song-index="index">
+                <div class="song-now-playing-icon-container">
+                    <div class="play-button-container">
+
+                    </div>
+                    <img class="now-playing" src="/now-playing.svg" />
+                </div>
+                <div class="song-meta-data" v-on:click="play(index)">
+                    <span class="song-title">{{song.name}}</span>
+                    <span class="song-artist">{{song.artist}}</span>
+                </div>
+                <a :href="song.url" :download="song.name">
+                    &#x1F4BE;
+                </a>
+                <!--<span class="song-duration">3:30</span>-->
+            </div>
+        </div>        <!-- Left Side Player -->
+
+
+    </div>
+    <!-- End Amplitdue Player -->
+    <!--
+        Include UX functions JS
+
+        NOTE: These are for handling things outside of the scope of AmplitudeJS
+    -->
+    <script type="text/javascript" src="app.js"></script>
+</body>
+</html>
