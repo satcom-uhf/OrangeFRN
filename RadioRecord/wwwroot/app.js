@@ -60,7 +60,7 @@ var playlist = Vue.createApp({
             songs: [],
             selectedDate: new Date(),
             year: new Date().getFullYear(),
-            month: new Date().getMonth() + 1,
+            month: new Date().getMonth(),
             day: new Date().getDate()
         };
     },
