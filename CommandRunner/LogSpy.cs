@@ -12,6 +12,8 @@ namespace OrangeFRN
         private readonly Config _config;
         public bool AllowToSendFeedback { get; private set; }
 
+        public Action<string,string> SetAntennaPosition { get; set; }
+
         public LogSpy(GpioController controller, Config config)
         {
             _controller = controller;
@@ -93,7 +95,7 @@ namespace OrangeFRN
             var length = to - from;
             if (length < 0)
             {
-                Log.Information("No commands found");
+                Log.Information("No key clicks detected");
                 return false;
             }
             var keys = line.Substring(from, length).Trim().Split(' ');
@@ -104,6 +106,7 @@ namespace OrangeFRN
             {
                 if (_config.Commands.TryGetValue(key, out var pins))
                 {
+                    Thread.Sleep(_config.ClickTimeMs);
                     ApplyState(pins, invertedLevel);
                     Log.Information("Press {key}", key);
                     Thread.Sleep(_config.ClickTimeMs);
@@ -116,28 +119,13 @@ namespace OrangeFRN
         }
         private void SetAntenna(string line)
         {
-            int from = line.IndexOf("ANT") + 3;
-            int to = line.LastIndexOf(_config.CommandSuffix);
-            var length = to - from;
-            if (length < 0)
+            if (!line.Contains("ANT "))
             {
-                Log.Information("No commands found");
+                Log.Information("No antenna commands detected");
                 return;
             }
-            var keys = line.Substring(from, length).Trim().Split(' ');
-            try
-            {
-                Log.Information("Opening {port}", _config.AntennaPort);
-                using var rotator = new System.IO.Ports.SerialPort(_config.AntennaPort, 115200);
-                rotator.Open();
-                rotator.Write($"AZ:{keys[0]},EL:{keys[1]}");
-                rotator.Close();
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-            
+            var keys = line.Replace("ANT","").Trim().Split(' ');
+            SetAntennaPosition(keys[0], keys[1]);
         }
         private void ApplyState(int[] pins, PinValue level)
         {

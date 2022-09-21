@@ -24,7 +24,26 @@ try
 
     Config cfg = InitConfig();
     using var controller = new GpioController();
+    Log.Information("Opening {port}", cfg.AntennaPort);
+
+    System.IO.Ports.SerialPort rotator=new System.IO.Ports.SerialPort(cfg.AntennaPort, 115200);
+    rotator.Open();
     var spy = new LogSpy(controller, cfg);
+    spy.SetAntennaPosition = (az, el) =>
+    {
+
+        try
+        {
+            var data = $"AZ:{az},EL:{el}";
+            Log.Information("Sending {data} to antenna", data);
+            rotator.Write(data);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+        }
+
+    };
     var detector = new DisplayUpdateDetector();
     detector.MessageDetected += (s, e) =>
     {
@@ -42,25 +61,22 @@ try
         }
     };
 
-    if (args.Length > 0)
-    {
-        Log.Information("Opening {port}", cfg.MotorolaPort);
-        var port = new System.IO.Ports.SerialPort(cfg.MotorolaPort);
+    Log.Information("Opening {port}", cfg.MotorolaPort);
+    var port = new System.IO.Ports.SerialPort(cfg.MotorolaPort);
 
-        port.DataReceived += (s, e) =>
+    port.DataReceived += (s, e) =>
+    {
+        while (port.BytesToRead > 0)
         {
-            while (port.BytesToRead > 0)
+            var b = port.ReadByte();
+            if (b == -1)
             {
-                var b = port.ReadByte();
-                if (b == -1)
-                {
-                    break;
-                }
-                detector.AddByte((byte)b);
+                break;
             }
-        };
-        port.Open();
-    }
+            detector.AddByte((byte)b);
+        }
+    };
+    port.Open();
 
     await spy.Run(cts.Token);
     return 0;
