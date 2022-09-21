@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RadioRecord", "RadioRecord\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OrangeFRN", "CommandRunner\OrangeFRN.csproj", "{A6473CDC-1C39-4A1D-8201-36573A8BA4CD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerialTool", "SerialTool\SerialTool.csproj", "{E322B702-2164-48FC-AFD1-F11DAF5E84F8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{A6473CDC-1C39-4A1D-8201-36573A8BA4CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A6473CDC-1C39-4A1D-8201-36573A8BA4CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A6473CDC-1C39-4A1D-8201-36573A8BA4CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E322B702-2164-48FC-AFD1-F11DAF5E84F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E322B702-2164-48FC-AFD1-F11DAF5E84F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E322B702-2164-48FC-AFD1-F11DAF5E84F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E322B702-2164-48FC-AFD1-F11DAF5E84F8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

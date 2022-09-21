@@ -44,8 +44,8 @@ try
 
     if (args.Length > 0)
     {
-        Log.Information("Opening {port}", args[0]);
-        var port = new System.IO.Ports.SerialPort(args[0]);
+        Log.Information("Opening {port}", cfg.MotorolaPort);
+        var port = new System.IO.Ports.SerialPort(cfg.MotorolaPort);
 
         port.DataReceived += (s, e) =>
         {

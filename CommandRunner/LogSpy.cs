@@ -70,7 +70,10 @@ namespace OrangeFRN
                 {
                     var cmd = await channel.Reader.ReadAsync(cancellationToken);
                     Log.Information(cmd);
-                    await ExecuteCommand(cmd);
+                    if (!ExecuteCommand(cmd))
+                    {
+                        SetAntenna(cmd);
+                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -83,7 +86,7 @@ namespace OrangeFRN
             }
         }
 
-        private async Task ExecuteCommand(string line)
+        private bool ExecuteCommand(string line)
         {
             int from = line.IndexOf(_config.CommandPrefix) + _config.CommandPrefix.Length;
             int to = line.LastIndexOf(_config.CommandSuffix);
@@ -91,7 +94,7 @@ namespace OrangeFRN
             if (length < 0)
             {
                 Log.Information("No commands found");
-                return;
+                return false;
             }
             var keys = line.Substring(from, length).Trim().Split(' ');
             PinValue defaultLevel = _config.DefaultLevel;
@@ -106,10 +109,35 @@ namespace OrangeFRN
                     Thread.Sleep(_config.ClickTimeMs);
                     ApplyState(_config.Pins, _config.DefaultLevel);
                     Log.Information("Free");
-                    Thread.Sleep(_config.ClickTimeMs);
                 }
             }
             AllowToSendFeedback = true;
+            return true;
+        }
+        private void SetAntenna(string line)
+        {
+            int from = line.IndexOf("ANT") + 3;
+            int to = line.LastIndexOf(_config.CommandSuffix);
+            var length = to - from;
+            if (length < 0)
+            {
+                Log.Information("No commands found");
+                return;
+            }
+            var keys = line.Substring(from, length).Trim().Split(' ');
+            try
+            {
+                Log.Information("Opening {port}", _config.AntennaPort);
+                using var rotator = new System.IO.Ports.SerialPort(_config.AntennaPort, 115200);
+                rotator.Open();
+                rotator.Write($"AZ:{keys[0]},EL:{keys[1]}");
+                rotator.Close();
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+            
         }
         private void ApplyState(int[] pins, PinValue level)
         {

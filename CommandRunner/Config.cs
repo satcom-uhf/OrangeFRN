@@ -2,6 +2,8 @@
 {
     public class Config
     {
+        public string AntennaPort { get; set; }
+        public string MotorolaPort { get; set; }
         public string PathToFRN { get; set; }
         public string ChatCommandTemplate { get; set; }
         public string CommandPrefix { get; set; } = "MOTO";
