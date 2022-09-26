@@ -12,7 +12,7 @@ namespace OrangeFRN
         private readonly Config _config;
         public bool AllowToSendFeedback { get; private set; }
 
-        public Action<string,string> SetAntennaPosition { get; set; }
+        public Action<string, string> SetAntennaPosition { get; set; }
 
         public LogSpy(GpioController controller, Config config)
         {
@@ -72,10 +72,10 @@ namespace OrangeFRN
                 {
                     var cmd = await channel.Reader.ReadAsync(cancellationToken);
                     Log.Information(cmd);
-                    if (!ExecuteCommand(cmd))
-                    {
-                        SetAntenna(cmd);
-                    }
+                    ExecuteCommand(cmd);
+                    SetAzimuth(cmd);
+                    SetElevation(cmd);
+
                 }
                 catch (OperationCanceledException)
                 {
@@ -88,17 +88,9 @@ namespace OrangeFRN
             }
         }
 
-        private bool ExecuteCommand(string line)
+        private void ExecuteCommand(string line)
+            => ParseExecute(line, _config.CommandPrefix, keys =>
         {
-            int from = line.IndexOf(_config.CommandPrefix) + _config.CommandPrefix.Length;
-            int to = line.LastIndexOf(_config.CommandSuffix);
-            var length = to - from;
-            if (length < 0)
-            {
-                Log.Information("No key clicks detected");
-                return false;
-            }
-            var keys = line.Substring(from, length).Trim().Split(' ');
             PinValue defaultLevel = _config.DefaultLevel;
             PinValue invertedLevel = !defaultLevel;
             AllowToSendFeedback = false;
@@ -115,17 +107,30 @@ namespace OrangeFRN
                 }
             }
             AllowToSendFeedback = true;
-            return true;
-        }
-        private void SetAntenna(string line)
+        });
+        private void SetAzimuth(string line)
+            => ParseExecute(line, "AZ", keys => SetAntennaPosition(keys[0], null));
+        private void SetElevation(string line)
+            => ParseExecute(line, "EL", keys => SetAntennaPosition(null, keys[0]));
+        private void ParseExecute(string line, string cmd, Action<string[]> execution)
         {
-            if (!line.Contains("ANT "))
+            int from = line.IndexOf(cmd) + cmd.Length;
+            int to = line.LastIndexOf(_config.CommandSuffix);
+            var length = to - from;
+            if (length < 0)
             {
-                Log.Information("No antenna commands detected");
                 return;
             }
-            var keys = line.Replace("ANT","").Trim().Split(' ');
-            SetAntennaPosition(keys[0], keys[1]);
+            Log.Information("Command {command} detected", cmd);
+            var keys = line.Substring(from, length).Trim().Split(' ').ToArray();
+            try
+            {
+                execution(keys);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Execution error");
+            }
         }
         private void ApplyState(int[] pins, PinValue level)
         {

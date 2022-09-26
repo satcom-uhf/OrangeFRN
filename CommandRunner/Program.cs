@@ -5,6 +5,7 @@ using System.Text.Json;
 using Serilog;
 using System.Diagnostics;
 using System.Text;
+using System.IO.Ports;
 
 const string config = "config.json";
 try
@@ -24,19 +25,39 @@ try
 
     Config cfg = InitConfig();
     using var controller = new GpioController();
-    Log.Information("Opening {port}", cfg.AntennaPort);
 
-    System.IO.Ports.SerialPort rotator=new System.IO.Ports.SerialPort(cfg.AntennaPort, 115200);
-    rotator.Open();
+    System.IO.Ports.SerialPort? rotator = null;
+    if (!string.IsNullOrEmpty(cfg.AntennaPort) && SerialPort.GetPortNames().Contains(cfg.AntennaPort))
+    {
+
+        Log.Information("Opening {port}", cfg.AntennaPort);
+        try
+        {
+            rotator = new System.IO.Ports.SerialPort(cfg.AntennaPort, 115200);
+            rotator.Open();
+        }
+        catch (Exception ex)
+        {
+            rotator = null;
+            Log.Error(ex, "Cannot conect to antenna controller");
+        }
+    }
     var spy = new LogSpy(controller, cfg);
+    var previousEl = "0.0";
+    var previousAz = "0.0";
     spy.SetAntennaPosition = (az, el) =>
     {
 
         try
         {
+            if (rotator == null) return;
+            az = az ?? previousAz;
+            el = el ?? previousEl;
             var data = $"AZ:{az},EL:{el}";
             Log.Information("Sending {data} to antenna", data);
             rotator.Write(data);
+            previousAz = az;
+            previousEl = el;
         }
         catch (Exception ex)
         {
