@@ -6,8 +6,6 @@
         public string MotorolaPort { get; set; }
         public string PathToFRN { get; set; }
         public string ChatCommandTemplate { get; set; }
-        public string CommandPrefix { get; set; } = "MOTO";
-        public string CommandSuffix { get; set; } = "!";
         public byte DefaultLevel { get; set; }
         public int ClickTimeMs { get; set; } = 300;
         public int[] Pins { get; set; } = new int [] {}; 

@@ -1,5 +1,6 @@
 ﻿using Serilog;
 using System.Device.Gpio;
+using System.Text.RegularExpressions;
 using System.Threading.Channels;
 
 namespace OrangeFRN
@@ -72,7 +73,7 @@ namespace OrangeFRN
                 {
                     var cmd = await channel.Reader.ReadAsync(cancellationToken);
                     Log.Information(cmd);
-                    ExecuteCommand(cmd);
+                    ClickButtons(cmd);
                     SetAzimuth(cmd);
                     SetElevation(cmd);
 
@@ -87,49 +88,50 @@ namespace OrangeFRN
                 }
             }
         }
-
-        private void ExecuteCommand(string line)
-            => ParseExecute(line, _config.CommandPrefix, keys =>
-        {
-            PinValue defaultLevel = _config.DefaultLevel;
-            PinValue invertedLevel = !defaultLevel;
-            AllowToSendFeedback = false;
-            foreach (var key in keys)
-            {
-                if (_config.Commands.TryGetValue(key, out var pins))
-                {
-                    Thread.Sleep(_config.ClickTimeMs);
-                    ApplyState(pins, invertedLevel);
-                    Log.Information("Press {key}", key);
-                    Thread.Sleep(_config.ClickTimeMs);
-                    ApplyState(_config.Pins, _config.DefaultLevel);
-                    Log.Information("Free");
-                }
-            }
-            AllowToSendFeedback = true;
-        });
-        private void SetAzimuth(string line)
-            => ParseExecute(line, "AZ", keys => SetAntennaPosition(keys[0], null));
         private void SetElevation(string line)
-            => ParseExecute(line, "EL", keys => SetAntennaPosition(null, keys[0]));
-        private void ParseExecute(string line, string cmd, Action<string[]> execution)
         {
-            int from = line.IndexOf(cmd) + cmd.Length;
-            int to = line.LastIndexOf(_config.CommandSuffix);
-            var length = to - from;
-            if (length < 0)
+            var m = Regex.Match(line, "EL (?<Angle>([+-]?[0-9]*[.])?[0-9]+)");
+            if (m.Success)
             {
-                return;
+                var angle = m.Groups["Angle"].Value;
+                Log.Information("Elevation {angle} detected", angle);
+                SetAntennaPosition(null, angle);
             }
-            Log.Information("Command {command} detected", cmd);
-            var keys = line.Substring(from, length).Trim().Split(' ').ToArray();
-            try
+        }
+
+        private void ClickButtons(string line)
+        {
+            var m = Regex.Match(line, "CH (?<Keys>([0-9a-cA-C*#]*))");
+            if (m.Success)
             {
-                execution(keys);
+                var cmd = m.Groups["Keys"].Value;
+                Log.Information("Keyboard command {angle} detected", cmd);
+                PinValue defaultLevel = _config.DefaultLevel;
+                PinValue invertedLevel = !defaultLevel;
+                AllowToSendFeedback = false;
+                foreach (var key in cmd)
+                {
+                    if (_config.Commands.TryGetValue(key.ToString(), out var pins))
+                    {
+                        Thread.Sleep(_config.ClickTimeMs);
+                        ApplyState(pins, invertedLevel);
+                        Log.Information("Press {key}", key);
+                        Thread.Sleep(_config.ClickTimeMs);
+                        ApplyState(_config.Pins, _config.DefaultLevel);
+                        Log.Information("Free");
+                    }
+                }
+                AllowToSendFeedback = true;
             }
-            catch (Exception ex)
+        }
+        private void SetAzimuth(string line)
+        {
+            var m = Regex.Match(line, "AZ (?<Angle>([+-]?[0-9]*[.])?[0-9]+)");
+            if (m.Success)
             {
-                Log.Error(ex, "Execution error");
+                var angle = m.Groups["Angle"].Value;
+                Log.Information("Azimuth {angle} detected", angle);
+                SetAntennaPosition(angle, null);
             }
         }
         private void ApplyState(int[] pins, PinValue level)
