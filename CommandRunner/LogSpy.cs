@@ -74,9 +74,12 @@ namespace OrangeFRN
                     var cmd = await channel.Reader.ReadAsync(cancellationToken);
                     Log.Information(cmd);
                     ClickButtons(cmd);
-                    SetAzimuth(cmd);
-                    SetElevation(cmd);
-
+                    var az = GetAzimuth(cmd);
+                    var el = GetElevation(cmd);
+                    if (az != null || el != null)
+                    {
+                        SetAntennaPosition(az, el);
+                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -88,15 +91,14 @@ namespace OrangeFRN
                 }
             }
         }
-        private void SetElevation(string line)
+        private string GetElevation(string line)
         {
             var m = Regex.Match(line, "EL (?<Angle>([+-]?[0-9]*[.])?[0-9]+)");
             if (m.Success)
             {
-                var angle = m.Groups["Angle"].Value;
-                Log.Information("Elevation {angle} detected", angle);
-                SetAntennaPosition(null, angle);
+                return m.Groups["Angle"].Value;
             }
+            return null;
         }
 
         private void ClickButtons(string line)
@@ -124,15 +126,14 @@ namespace OrangeFRN
                 AllowToSendFeedback = true;
             }
         }
-        private void SetAzimuth(string line)
+        private string GetAzimuth(string line)
         {
             var m = Regex.Match(line, "AZ (?<Angle>([+-]?[0-9]*[.])?[0-9]+)");
             if (m.Success)
             {
-                var angle = m.Groups["Angle"].Value;
-                Log.Information("Azimuth {angle} detected", angle);
-                SetAntennaPosition(angle, null);
+                return m.Groups["Angle"].Value;
             }
+            return null;
         }
         private void ApplyState(int[] pins, PinValue level)
         {
